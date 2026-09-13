@@ -28,7 +28,7 @@ const listSchema = new Schema({
     title: {
         required: true,
         type: String,
-        match: /^[\x20-\x7e]{4,100}$$/
+        match: /^[\x20-\x7e]{4,100}$/
     },
     options: {
         required: true,

@@ -2,15 +2,113 @@
 <html lang='en'>
 
 <head>
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hello World</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
 </head>
 
 <body>
-    <form action='/login' method='POST'>
-        <input type='text' name='username'>
-        <input type='password' name='password'>
-        <input type='submit'>
-    </form>
+    <nav>
+        <ul>
+
+        </ul>
+        <ul style="margin-right: 0;">
+            <li>
+                <button id="sign-in-btn">
+                    Sign In
+                </button>
+            </li>
+            <li>
+                <button id="sign-up-btn">
+                    Sign Up
+                </button>
+            </li>
+            <li>
+                <span id="signed-in-display" hidden></span>
+            </li>
+            <li>
+                <button id="sign-out-btn" hidden>
+                    Sign Out
+                </button>
+            </li>
+        </ul>
+    </nav>
+    <dialog id="sign-in">
+        <article>
+            <header>
+                <button aria-label="Close" rel="prev"></button>
+                <h2>Sign In</h2>
+            </header>
+            <form id="sign-in-form">
+                <label>
+                    Username: <input type="text" name="username" required pattern="[a-zA-Z0-9\-_]{4,20}">
+                </label>
+                <label>
+                    Password: <input type="password" name="password" required pattern="[\x20-\x7e]{8,24}">
+                </label>
+                <button name="submit">Sign In</button>
+                <p id="sign-in-form-error"></p>
+            </form>
+        </article>
+    </dialog>
+    <dialog id="sign-up">
+        <article>
+            <header>
+                <button aria-label="Close" rel="prev"></button>
+                <h2>Sign Up</h2>
+            </header>
+            <form id="sign-up-form">
+                <p>Username must be 4-20 alphanumeric characters, hyphens, or underscores.</p>
+                <label>
+                    Username: <input type="text" name="username" required pattern="[a-zA-Z0-9\-_]{4,20}">
+                </label>
+                <p>Password must be 8-24 characters.</p>
+                <label>
+                    Password: <input type="password" name="password" required pattern="[\x20-\x7e]{8,24}">
+                </label>
+                <label>
+                    Confirm Password: <input type="password" name="password2" required pattern="[\x20-\x7e]{8,24}">
+                </label>
+                <button name="submit">Sign Up</button>
+                <p id="sign-up-form-error"></p>
+            </form>
+        </article>
+    </dialog>
+    <dialog id="edit-list">
+        <article>
+            <header>
+                <button aria-label="Close" rel="prev"></button>
+                <h2>Edit List</h2>
+            </header>
+            <form id="edit-list-form">
+                <label>
+                    Title: <input type="text" name="title" required pattern="[\x20-\x7e]{4,100}" id="edit-list-title">
+                </label>
+                <p>
+                    <button id="edit-list-add-option">Add Option</button>
+                </p>
+                <ul id="edit-list-options"></ul>
+                <button name="submit">Save</button>
+                <p id="edit-list-form-error"></p>
+            </form>
+        </article>
+    </dialog>
+    <main class="container">
+        <div id="home">
+            <p id="sign-in-warning">You must be signed in to create a list.</p>
+            <p>
+                <button id="create-list-btn">
+                    Create a List
+                </button>
+            </p>
+            <div id="lists"></div>
+        </div>
+        <div id="list" hidden>
+
+        </div>
+    </main>
+    <script src="scripts/index.js"></script>
 </body>
 
 </html>
