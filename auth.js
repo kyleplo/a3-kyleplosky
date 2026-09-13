@@ -1,0 +1,148 @@
+import { User } from "./models.js";
+
+export async function getUserByToken(token) {
+    if (!token) {
+        return null;
+    }
+
+    const user = await User.findOne({ token }).exec();
+
+    if (user && user.tokenExpiry > Date.now()) {
+        return user;
+    }
+
+    return null;
+}
+
+export function authRoutes(app) {
+    app.get("/api/status", async (req, res) => {
+        const user = await getUserByToken(req.session?.token);
+
+        if (user) {
+            res.json({
+                success: true,
+                loggedIn: true,
+                user: user.username
+            })
+        } else {
+            res.json({
+                success: true,
+                loggedIn: false,
+                user: null
+            })
+        }
+    })
+
+    app.post("/api/sign-up", async (req, res) => {
+        const user = await getUserByToken(req.session?.token);
+
+        if (user) {
+            res.status(400).json({
+                success: false,
+                error: "Cannot sign up while already signed in"
+            })
+            return;
+        }
+
+      
+        const newUser = new User({
+            username: req.body.username,
+            password: btoa(req.body.password),
+            token: (Math.random()).toString(36).slice(2),
+            tokenExpiry: Date.now() + 86400000
+        });
+
+        try {
+            await newUser.validate()
+        } catch {
+            res.status(400).json({
+                success: false,
+                error: "Invalid username or password"
+            })
+            return;
+        }
+
+        if (!req.body.password2 || req.body.password2 !== req.body.password) {
+            res.status(400).json({
+                success: false,
+                error: "Passwords do not match"
+            })
+            return;
+        }
+
+        if (await User.findOne({ username: req.body.username }).exec()) {
+            res.status(400).json({
+                success: false,
+                error: "A user already exists with that username"
+            })
+            return;
+        }
+
+
+        await newUser.save();
+
+        req.session.token = newUser.token;
+
+        res.status(200).json({
+            success: true,
+            token: newUser.token
+        })
+    })
+
+    app.post("/api/sign-in", async (req, res) => {
+        const signedInUser = await getUserByToken(req.session?.token);
+
+        if (signedInUser) {
+            res.status(400).json({
+                success: false,
+                error: "Cannot sign in while already signed in"
+            })
+            return;
+        }
+
+        const signingInUser = await User.findOne({ username: req.body?.username }).exec();
+
+        if (!signingInUser) {
+            res.status(404).json({
+                success: false,
+                error: "No user found with the specified username"
+            })
+            return;
+        }
+
+        if (signingInUser.password !== btoa(req.body.password)) {
+            res.status(401).json({
+                success: false,
+                error: "Incorrect password"
+            })
+            return;
+        }
+
+        signingInUser.token = (Math.random()).toString(36).slice(2);
+        signingInUser.tokenExpiry = Date.now() + 86400000;
+        await signingInUser.save();
+        req.session.token = signingInUser.token;
+
+        res.status(200).json({
+            success: true,
+            token: signingInUser.token
+        })
+    })
+
+    app.post("/api/sign-out", async (req, res) => {
+        const user = await getUserByToken(req.session?.token);
+
+        if (user) {
+            user.tokenExpiry = 0;
+            await user.save();
+            req.session.token = null;
+            res.status(200).json({
+                success: true
+            })
+        } else {
+            res.status(401).json({
+                error: "Not signed in"
+            })
+        }
+    })
+}
