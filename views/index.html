@@ -4,15 +4,18 @@
 <head>
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hello World</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+    <title>Tierable</title>
+    <meta name="description" content="Welcome to Tierable, the place for collaborative tier lists. Create lists of things to rank and then share and rank them with your friends.">
+    <link rel="stylesheet" href="/styles/pico.min.css">
+    <link rel="stylesheet" href="/styles/style.css">
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
 </head>
 
 <body>
     <nav>
         <ul style="margin-left: 0;">
             <li>
-                <strong>Tierable</strong>
+                <strong class="title">Tierable</strong>
             </li>
             <li>
                 <button id="my-lists-btn">
@@ -49,10 +52,10 @@
             </header>
             <form id="sign-in-form">
                 <label>
-                    Username: <input type="text" name="username" required pattern="[a-zA-Z0-9\-_]{4,20}">
+                    Username: <input type="text" name="username" required pattern="[a-zA-Z0-9\-_]{4,20}" autocomplete="username">
                 </label>
                 <label>
-                    Password: <input type="password" name="password" required pattern="[\x20-\x7e]{8,24}">
+                    Password: <input type="password" name="password" required pattern="[\x20-\x7e]{8,24}" autocomplete="current-password">
                 </label>
                 <button name="submit">Sign In</button>
                 <p id="sign-in-form-error"></p>
@@ -68,14 +71,14 @@
             <form id="sign-up-form">
                 <p>Username must be 4-20 alphanumeric characters, hyphens, or underscores.</p>
                 <label>
-                    Username: <input type="text" name="username" required pattern="[a-zA-Z0-9\-_]{4,20}">
+                    Username: <input type="text" name="username" required pattern="[a-zA-Z0-9\-_]{4,20}" autocomplete="username">
                 </label>
                 <p>Password must be 8-24 characters.</p>
                 <label>
-                    Password: <input type="password" name="password" required pattern="[\x20-\x7e]{8,24}">
+                    Password: <input type="password" name="password" required pattern="[\x20-\x7e]{8,24}" autocomplete="new-password">
                 </label>
                 <label>
-                    Confirm Password: <input type="password" name="password2" required pattern="[\x20-\x7e]{8,24}">
+                    Confirm Password: <input type="password" name="password2" required pattern="[\x20-\x7e]{8,24}" autocomplete="new-password">
                 </label>
                 <button name="submit">Sign Up</button>
                 <p id="sign-up-form-error"></p>
@@ -114,9 +117,12 @@
             </header>
         </article>
     </dialog>
-    <main class="container">
+    <noscript class="container">
+        <p>You need JavaScript enable to run this app.</p>
+    </noscript>
+    <main class="container" hidden>
         <section id="home">
-            <h1>Tierable</h1>
+            <h1 class="title">Tierable</h1>
             <p>Welcome to Tierable, the place for collaborative tier lists. Create lists of things to rank and then share and rank them with your friends.</p>
             <p id="sign-in-warning">You must be signed in to create a list.</p>
             <p>
@@ -132,14 +138,21 @@
         <section id="list" hidden>
             <h1 id="list-title"></h1>
             <p role="group">
-                <button id="list-edit" hidden>Edit</button>
-                <button id="list-delete" hidden>Delete</button>
                 <button id="list-vote" hidden>Vote</button>
-                <button id="list-remove-vote" hidden>Remove Vote</button>
+                <button id="list-remove-vote" hidden class="secondary">Remove Vote</button>
+                <button id="list-edit" hidden class="secondary">Edit</button>
+                <button id="list-delete" hidden class="danger">Delete</button>
                 <button id="list-share">Share</button>
             </p>
             <p id="sign-in-vote-warning">You must be signed in to vote.</p>
-            <table id="list-table"></table>
+            <table id="list-table">
+                <tr><th>S</th><td></td></tr>
+                <tr><th>A</th><td></td></tr>
+                <tr><th>B</th><td></td></tr>
+                <tr><th>C</th><td></td></tr>
+                <tr><th>D</th><td></td></tr>
+                <tr><th>F</th><td></td></tr>
+            </table>
         </section>
     </main>
     <script src="scripts/index.js"></script>

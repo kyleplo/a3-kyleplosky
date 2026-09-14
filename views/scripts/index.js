@@ -1,6 +1,6 @@
 let status, active;
 
-window.addEventListener("load", async () => {
+document.addEventListener("DOMContentLoaded", async () => {
     window.addEventListener("popstate", () => {
         showPage();
     })
@@ -229,6 +229,8 @@ async function showPage() {
     document.querySelector("#edit-list").close();
     document.querySelector("#cast-vote").close();
 
+    document.querySelector("main").setAttribute("hidden", "hidden");
+
     if (status.loggedIn) {
         document.querySelector("#sign-in-btn").setAttribute("hidden", "hidden");
         document.querySelector("#sign-up-btn").setAttribute("hidden", "hidden");
@@ -250,6 +252,7 @@ async function showPage() {
         document.querySelector("#list").setAttribute("hidden", "hidden");
         document.querySelector("#lists").innerHTML = "";
         active = null;
+        document.title = "Tierable"
 
         if (status.loggedIn) {
             document.querySelector("#sign-in-warning").setAttribute("hidden", "hidden");
@@ -259,7 +262,7 @@ async function showPage() {
 
             lists.lists.forEach(list => {
                 const row = document.createElement("DIV");
-                row.classList.add("grid");
+                row.setAttribute("role", "group");
                 row.style.marginBottom = "0.5em";
 
                 const name = document.createElement("BUTTON");
@@ -274,6 +277,7 @@ async function showPage() {
                 const edit = document.createElement("BUTTON");
                 edit.textContent = "Edit";
                 edit.classList.add("secondary");
+                edit.style.maxWidth = "25%";
                 row.append(edit);
 
                 edit.addEventListener("click", () => {
@@ -287,7 +291,8 @@ async function showPage() {
 
                 const del = document.createElement("BUTTON");
                 del.textContent = "Delete";
-                del.classList.add("secondary");
+                del.classList.add("danger");
+                del.style.maxWidth = "25%";
                 row.append(del);
 
                 del.addEventListener("click", async () => {
@@ -303,6 +308,8 @@ async function showPage() {
             document.querySelector("#create-list-btn").setAttribute("hidden", "hidden");
             document.querySelector("#sign-in-warning").removeAttribute("hidden");
         }
+        
+        document.querySelector("main").removeAttribute("hidden");
     } else {
         document.querySelector("#list").removeAttribute("hidden");
         document.querySelector("#home").setAttribute("hidden", "hidden");
@@ -313,13 +320,16 @@ async function showPage() {
         const data = await fetch("/api/list" + location.pathname).then(r => r.json());
 
         if (!data.success) {
+            document.title = "Not Found - Tierable"
             active = null;
             document.querySelector("#list").setAttribute("hidden", "hidden");
             document.querySelector("#not-found").removeAttribute("hidden");
+            document.querySelector("main").removeAttribute("hidden");
             return;
         }
 
         active = data;
+        document.title = data.title + " - Tierable"
 
         if (data.isOwn) {
             document.querySelector("#list-edit").removeAttribute("hidden");
@@ -365,6 +375,8 @@ async function showPage() {
 
             document.querySelector("#list-table").append(tr);
         });
+
+        document.querySelector("main").removeAttribute("hidden");
     }
 }
 
@@ -382,7 +394,7 @@ function addOption(opt = "") {
 
     const del = document.createElement("BUTTON");
     del.textContent = "Delete";
-    del.classList.add("secondary");
+    del.classList.add("danger");
     del.addEventListener("click", e => {
         e.preventDefault();
         li.remove();

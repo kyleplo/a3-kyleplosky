@@ -1,0 +1,61 @@
+:root {
+    --pico-border-radius: 2em;
+    --pico-font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+}
+
+th {
+    font-weight: bold;
+    color: black;
+    width: 3em;
+}
+
+tr:nth-child(1) th {
+    background-color: #cc4444;
+}
+
+tr:nth-child(2) th {
+    background-color: #cc9944;
+}
+
+tr:nth-child(3) th {
+    background-color: #cccc44;
+}
+
+tr:nth-child(4) th {
+    background-color: #22cc22;
+}
+
+tr:nth-child(5) th {
+    background-color: #4477cc;
+}
+
+tr:nth-child(6) th {
+    background-color: #cc44cc;
+}
+
+.title {
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    background-image: linear-gradient(to right, #cc4444, #cc9944, #cccc44, #22cc22, #4477cc, #cc44cc);
+    width: min-content;
+}
+
+nav .title {
+    font-size: 130%;
+}
+
+.danger {
+    --pico-background-color: #cc4444;
+    --pico-border-color: #bb3333;
+}
+
+button.danger:hover {
+    --pico-background-color: #bb3333;
+    --pico-border-color: #aa2222;
+}
+
+nav {
+    border-bottom: solid 1px var(--pico-contrast-underline);
+}
