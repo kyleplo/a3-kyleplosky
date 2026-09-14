@@ -108,7 +108,7 @@ export function authRoutes(app) {
             return;
         }
 
-        const signingInUser = await User.findOne({ username: req.body?.username }).exec();
+        const signingInUser = await User.findOne({ username: req.body?.username, ghId: null }).exec();
 
         if (!signingInUser) {
             res.status(404).json({
@@ -152,5 +152,58 @@ export function authRoutes(app) {
                 error: "Not signed in"
             })
         }
+    })
+
+    app.get("/api/gh-authorize", async (req, res) => {
+        const user = await getUserByToken(req.session?.token);
+
+        if (user) {
+            res.redirect("/");
+            return;
+        }
+
+        const authData = await fetch("https://github.com/login/oauth/access_token?client_id=" + process.env.GH_CLIENT_ID + "&client_secret=" + process.env.GH_CLIENT_SECRET + "&code=" + req?.query?.code, {
+            method: "POST",
+            headers: {
+                "Accept": "application/json"
+            }
+        }).then(r => r.json());
+
+        const userData = await fetch("https://api.github.com/user", {
+            headers: {
+                "Authorization": "Bearer " + authData["access_token"]
+            }
+        }).then(r => r.json());
+
+        if (userData.login && userData.id) {
+            const signingInUser = await User.findOne({ ghId: userData.id }).exec();
+
+            if (signingInUser) {
+                signingInUser.token = (Math.random()).toString(36).slice(2);
+                signingInUser.tokenExpiry = Date.now() + 86400000;
+                await signingInUser.save();
+                req.session.token = signingInUser.token;
+            } else {
+                const newUser = new User({
+                    username: userData.login,
+                    ghId: userData.id,
+                    token: (Math.random()).toString(36).slice(2),
+                    tokenExpiry: Date.now() + 86400000
+                });
+                
+                try {
+                    await newUser.validate()
+                } catch {
+                    res.redirect("/");
+                    return;
+                }
+
+                await newUser.save();
+                req.session.token = newUser.token;
+            }
+        }
+
+        res.redirect("/");
+        return;
     })
 }

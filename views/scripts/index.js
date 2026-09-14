@@ -11,6 +11,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         })
     });
 
+    document.querySelectorAll(".gh-sign-in").forEach(a => {
+        a.setAttribute("href", "https://github.com/login/oauth/authorize?client_id=Ov23liXjxJVqJW9S5dNU&redirect_uri=" + location.origin + "/api/gh-authorize")
+    })
+
     document.querySelector("#sign-out-btn").addEventListener("click", async e => {
         e.target.setAttribute("aria-busy", "true");
         await fetch("/api/sign-out", { method: "POST" }).then(r => r.json());

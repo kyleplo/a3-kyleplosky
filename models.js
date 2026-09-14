@@ -7,8 +7,12 @@ const userSchema = new Schema({
         match: /^[a-zA-Z0-9\-\_]{4,20}$/
     },
     password: {
-        required: true,
+        required: false,
         type: String
+    },
+    ghId: {
+        required: false,
+        type: Number
     },
     token: {
         required: true,
