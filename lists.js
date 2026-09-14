@@ -38,6 +38,13 @@ export function listRoutes(app) {
     })
 
     app.delete("/api/list/:list", async (req, res) => {
+        if (req.params.list.length !== 24) {
+            res.status(404).json({
+                success: false,
+                error: "List not found"
+            })
+        }
+
         const user = await getUserByToken(req.session?.token);
 
         if (!user) {
@@ -70,6 +77,13 @@ export function listRoutes(app) {
     })
 
     app.put("/api/list/:list", async (req, res) => {
+        if (req.params.list.length !== 24) {
+            res.status(404).json({
+                success: false,
+                error: "List not found"
+            })
+        }
+
         const user = await getUserByToken(req.session?.token);
         
         if (!user) {
@@ -140,6 +154,16 @@ export function listRoutes(app) {
     })
 
     app.get("/api/list/:list", async (req, res) => {
+        if (req.params.list.length !== 24) {
+            res.status(404).json({
+                success: false,
+                error: "List not found"
+            })
+            return;
+        }
+
+        const user = await getUserByToken(req.session?.token);
+
         const list = await List.findOne({
             _id: req.params.list
         }).exec()
@@ -149,8 +173,21 @@ export function listRoutes(app) {
         }).exec();
 
         const totals = {};
+        const tiers = {
+            s: [],
+            a: [],
+            b: [],
+            c: [],
+            d: [],
+            f: []
+        };
+        let hasVoted = false;
 
         votes.forEach(vote => {
+            if (vote.voter.toHexString() === user?._id.toHexString()) {
+                hasVoted = true;
+            }
+
             vote.votes.forEach((value, option) => {
                 if (list.options.includes(option)) {
                     totals[option] = {
@@ -164,16 +201,35 @@ export function listRoutes(app) {
         const averages = {};
 
         Object.entries(totals).forEach(entry => {
-            averages[entry[0]] = entry[1].total / entry[1].count;
+            const avg = entry[1].total / entry[1].count;
+            averages[entry[0]] = avg;
+            
+            if (avg > 4.5) {
+                tiers.s.push(entry[0])
+            } else if (avg > 3.5) {
+                tiers.a.push(entry[0])
+            } else if (avg > 2.5) {
+                tiers.b.push(entry[0])
+            } else if (avg > 1.5) {
+                tiers.c.push(entry[0])
+            } else if (avg > 0.5) {
+                tiers.d.push(entry[0])
+            } else {
+                tiers.f.push(entry[0])
+            }
         })
 
         if (list && votes) {
             res.status(200).json({
                 success: true,
+                id: list._id,
                 title: list.title,
                 options: list.options,
                 voteCount: votes.length,
-                averages: averages
+                averages: averages,
+                tiers: tiers,
+                isOwn: list.creator.toHexString() === user?._id.toHexString(),
+                hasVoted
             })
         } else {
             res.status(404).json({
@@ -184,6 +240,13 @@ export function listRoutes(app) {
     })
 
     app.post("/api/list/:list/vote", async (req, res) => {
+        if (req.params.list.length !== 24) {
+            res.status(404).json({
+                success: false,
+                error: "List not found"
+            })
+        }
+
         const user = await getUserByToken(req.session?.token);
         
         if (!user) {
@@ -248,6 +311,13 @@ export function listRoutes(app) {
     })
 
     app.delete("/api/list/:list/vote", async (req, res) => {
+        if (req.params.list.length !== 24) {
+            res.status(404).json({
+                success: false,
+                error: "List not found"
+            })
+        }
+
         const user = await getUserByToken(req.session?.token);
         
         if (!user) {
@@ -276,6 +346,13 @@ export function listRoutes(app) {
     })
 
     app.get("/api/list/:list/vote", async (req, res) => {
+        if (req.params.list.length !== 24) {
+            res.status(404).json({
+                success: false,
+                error: "List not found"
+            })
+        }
+        
         const user = await getUserByToken(req.session?.token);
         
         if (!user) {
@@ -302,9 +379,9 @@ export function listRoutes(app) {
                 votes
             })
         } else {
-            res.status(404).json({
-                success: false,
-                error: "Vote not found"
+            res.status(200).json({
+                success: true,
+                votes: {}
             })
         }
     })

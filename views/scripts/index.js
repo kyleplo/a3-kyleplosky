@@ -1,6 +1,10 @@
-let status, editing;
+let status, active;
 
 window.addEventListener("load", async () => {
+    window.addEventListener("popstate", () => {
+        showPage();
+    })
+
     document.querySelectorAll("button[aria-label=Close]").forEach(btn => {
         btn.addEventListener("click", () => {
             btn.parentElement.parentElement.parentElement.close();
@@ -75,7 +79,7 @@ window.addEventListener("load", async () => {
     });
 
     document.querySelector("#create-list-btn").addEventListener("click", () => {
-        editing = null;
+        active = null;
         document.querySelector("#edit-list").show();
         document.querySelector("#edit-list-options").innerHTML = "";
         document.querySelector("#edit-list-form-error").textContent = "";
@@ -99,8 +103,8 @@ window.addEventListener("load", async () => {
                 options.push(elem.value);
             }
         })
-        const data = await fetch(editing ? "/api/list/" + editing : "/api/list", {
-            method: editing ? "PUT" : "POST",
+        const data = await fetch(active ? "/api/list/" + active.id : "/api/list", {
+            method: active ? "PUT" : "POST",
             headers: {
                 "Content-Type": "application/json"
             },
@@ -118,6 +122,103 @@ window.addEventListener("load", async () => {
         }
     })
 
+    document.querySelector("#my-lists-btn").addEventListener("click", () => {
+        history.pushState({}, "", "/");
+        showPage();
+    })
+
+    document.querySelector("#list-edit").addEventListener("click", () => {
+        document.querySelector("#edit-list").show();
+        document.querySelector("#edit-list-options").innerHTML = "";
+        document.querySelector("#edit-list-form-error").textContent = "";
+        document.querySelector("#edit-list-title").value = active.title;
+        active.options.forEach(addOption);
+    });
+
+    document.querySelector("#list-delete").addEventListener("click", async e => {
+        e.target.setAttribute("aria-busy", "true");
+        await fetch("/api/list/" + active.id, { method: "DELETE" });
+        e.target.setAttribute("aria-busy", "false");
+        history.pushState({}, "", "/");
+        showPage();
+    });
+
+    document.querySelector("#list-remove-vote").addEventListener("click", async e => {
+        e.target.setAttribute("aria-busy", "true");
+        await fetch("/api/list/" + active.id + "/vote", { method: "DELETE" });
+        e.target.setAttribute("aria-busy", "false");
+        showPage();
+    });
+
+    document.querySelector("#list-vote").addEventListener("click", async e => {
+        let voteData = {};
+
+        if (status.loggedIn) {
+            e.target.setAttribute("aria-busy", "true");
+            voteData = await fetch("/api/list/" + active.id + "/vote").then(r => r.json());
+            e.target.setAttribute("aria-busy", "false");
+        }
+
+        document.querySelector("#cast-vote").show();
+        document.querySelector("#cast-vote-form-error").textContent = "";
+
+        document.querySelector("#cast-vote-form div").innerHTML = "";
+        active.options.forEach(opt => {
+            const label = document.createElement("LABEL");
+            label.textContent = opt + ":"
+
+            const select = document.createElement("SELECT");
+            select.setAttribute("data-opt", opt);
+            ["S", "A", "B", "C", "D", "F"].forEach((letter, idx) => {
+                const option = document.createElement("OPTION");
+                option.textContent = letter;
+                option.value = 5 - idx;
+                if (voteData?.votes[opt] === 5 - idx) {
+                    option.setAttribute("selected", "selected");
+                }
+                select.appendChild(option);
+            })
+            select.setAttribute("name", Math.random().toString(36).slice(2));
+            label.appendChild(select);
+
+            document.querySelector("#cast-vote-form div").append(label)
+        })
+    });
+
+    document.querySelector("#cast-vote-form").addEventListener("submit", async e => {
+        e.preventDefault();
+        e.target.elements["submit"].setAttribute("aria-busy", "true");
+        let options = [];
+        Array.from(e.target.elements).forEach(elem => {
+            if (elem.tagName === "SELECT") {
+                options.push([elem.getAttribute("data-opt"), parseInt(elem.value)]);
+            }
+        })
+        const data = await fetch("/api/list/" + active.id + "/vote", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                votes: options
+            })
+        }).then(r => r.json());
+        e.target.elements["submit"].setAttribute("aria-busy", "false");
+
+        if (data.success) {
+            showPage();
+        } else {
+            document.querySelector("#cast-vote-form-error").textContent = data.error;
+        }
+    });
+
+    document.querySelector("#list-share").addEventListener("click", () => {
+        navigator.share({
+            title: "Vote on " + active.title,
+            url: location.href
+        })
+    })
+
     status = await fetch("/api/status").then(r => r.json());
     showPage();
 });
@@ -126,6 +227,7 @@ async function showPage() {
     document.querySelector("#sign-in").close();
     document.querySelector("#sign-up").close();
     document.querySelector("#edit-list").close();
+    document.querySelector("#cast-vote").close();
 
     if (status.loggedIn) {
         document.querySelector("#sign-in-btn").setAttribute("hidden", "hidden");
@@ -141,10 +243,13 @@ async function showPage() {
         document.querySelector("#sign-out-btn").setAttribute("hidden", "hidden");
     }
 
+    document.querySelector("#not-found").setAttribute("hidden", "hidden");
+
     if (location.pathname === "/" || location.pathname === "index.html") {
         document.querySelector("#home").removeAttribute("hidden");
         document.querySelector("#list").setAttribute("hidden", "hidden");
         document.querySelector("#lists").innerHTML = "";
+        active = null;
 
         if (status.loggedIn) {
             document.querySelector("#sign-in-warning").setAttribute("hidden", "hidden");
@@ -161,13 +266,18 @@ async function showPage() {
                 name.textContent = list.title;
                 row.append(name);
 
+                name.addEventListener("click", () => {
+                    history.pushState({}, "", "/" + list.id);
+                    showPage();
+                })
+
                 const edit = document.createElement("BUTTON");
                 edit.textContent = "Edit";
                 edit.classList.add("secondary");
                 row.append(edit);
 
                 edit.addEventListener("click", () => {
-                    editing = list.id;
+                    active = list;
                     document.querySelector("#edit-list").show();
                     document.querySelector("#edit-list-options").innerHTML = "";
                     document.querySelector("#edit-list-form-error").textContent = "";
@@ -196,6 +306,65 @@ async function showPage() {
     } else {
         document.querySelector("#list").removeAttribute("hidden");
         document.querySelector("#home").setAttribute("hidden", "hidden");
+
+        document.querySelector("#list-title").textContent = "";
+        document.querySelector("#list-table").innerHTML = "";
+
+        const data = await fetch("/api/list" + location.pathname).then(r => r.json());
+
+        if (!data.success) {
+            active = null;
+            document.querySelector("#list").setAttribute("hidden", "hidden");
+            document.querySelector("#not-found").removeAttribute("hidden");
+            return;
+        }
+
+        active = data;
+
+        if (data.isOwn) {
+            document.querySelector("#list-edit").removeAttribute("hidden");
+            document.querySelector("#list-delete").removeAttribute("hidden");
+        } else {
+            document.querySelector("#list-edit").setAttribute("hidden", "hidden");
+            document.querySelector("#list-delete").setAttribute("hidden", "hidden");
+        }
+
+        if (status.loggedIn) {
+            document.querySelector("#list-vote").removeAttribute("hidden");
+            document.querySelector("#sign-in-vote-warning").setAttribute("hidden", "hidden");
+        } else {
+            document.querySelector("#list-vote").setAttribute("hidden", "hidden");
+            document.querySelector("#sign-in-vote-warning").removeAttribute("hidden");
+        }
+
+        if (data.hasVoted) {
+            document.querySelector("#list-remove-vote").removeAttribute("hidden");
+        } else {
+            document.querySelector("#list-remove-vote").setAttribute("hidden", "hidden");
+        }
+
+        if ("share" in navigator) {
+            document.querySelector("#list-share").removeAttribute("hidden");
+        } else {
+            document.querySelector("#list-share").setAttribute("hidden", "hidden");
+        }
+
+        document.querySelector("#list-title").textContent = data.title;
+
+        Object.entries(data.tiers).forEach(tier => {
+            const tr = document.createElement("TR");
+
+            const th = document.createElement("TH");
+            th.textContent = tier[0].toUpperCase();
+            th.setAttribute("scope", "row");
+            tr.append(th);
+
+            const td = document.createElement("TD");
+            td.textContent = tier[1].join(", ");
+            tr.append(td);
+
+            document.querySelector("#list-table").append(tr);
+        });
     }
 }
 
@@ -205,8 +374,9 @@ function addOption(opt = "") {
 
     const input = document.createElement("INPUT");
     input.setAttribute("type", "text");
-    input.setAttribute("pattern", "[\x20-\x7e]{2,100}");
+    input.setAttribute("pattern", "[\x20-\x7e]{1,100}");
     input.setAttribute("required", "required");
+    input.setAttribute("name", Math.random().toString(36).slice(2));
     input.value = opt;
     li.append(input);
 

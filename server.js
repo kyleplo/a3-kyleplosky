@@ -24,6 +24,8 @@ listRoutes(app);
 const uri = `mongodb+srv://${process.env.MONGODB_USERNAME}:${process.env.MONGODB_PASSWORD}@${process.env.MONGODB_HOST}`
 connect(uri);
 
-
+app.get("/:list", (req, res) => {
+    res.sendFile(import.meta.dirname + "/views/index.html")
+})
 
 app.listen(process.env.PORT || 3000)

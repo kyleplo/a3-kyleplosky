@@ -35,7 +35,7 @@ const listSchema = new Schema({
         type: [{
             required: true,
             type: String,
-            match: /^[\x20-\x7e]{2,100}$/
+            match: /^[\x20-\x7e]{1,100}$/
         }],
         validate: val => Array.isArray(val) && val.length >= 2 && val.length <= 100
     },

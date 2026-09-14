@@ -10,8 +10,15 @@
 
 <body>
     <nav>
-        <ul>
-
+        <ul style="margin-left: 0;">
+            <li>
+                <strong>Tierable</strong>
+            </li>
+            <li>
+                <button id="my-lists-btn">
+                    My Tier Lists
+                </button>
+            </li>
         </ul>
         <ul style="margin-right: 0;">
             <li>
@@ -94,8 +101,23 @@
             </form>
         </article>
     </dialog>
+    <dialog id="cast-vote">
+        <article>
+            <header>
+                <button aria-label="Close" rel="prev"></button>
+                <h2>Cast Vote</h2>
+                <form id="cast-vote-form">
+                    <div></div>
+                    <button name="submit">Cast Vote</button>
+                    <p id="cast-vote-form-error"></p>
+                </form>
+            </header>
+        </article>
+    </dialog>
     <main class="container">
-        <div id="home">
+        <section id="home">
+            <h1>Tierable</h1>
+            <p>Welcome to Tierable, the place for collaborative tier lists. Create lists of things to rank and then share and rank them with your friends.</p>
             <p id="sign-in-warning">You must be signed in to create a list.</p>
             <p>
                 <button id="create-list-btn">
@@ -103,10 +125,22 @@
                 </button>
             </p>
             <div id="lists"></div>
-        </div>
-        <div id="list" hidden>
-
-        </div>
+        </section>
+        <section id="not-found" hidden>
+            <h1>Not Found</h1>
+        </section>
+        <section id="list" hidden>
+            <h1 id="list-title"></h1>
+            <p role="group">
+                <button id="list-edit" hidden>Edit</button>
+                <button id="list-delete" hidden>Delete</button>
+                <button id="list-vote" hidden>Vote</button>
+                <button id="list-remove-vote" hidden>Remove Vote</button>
+                <button id="list-share">Share</button>
+            </p>
+            <p id="sign-in-vote-warning">You must be signed in to vote.</p>
+            <table id="list-table"></table>
+        </section>
     </main>
     <script src="scripts/index.js"></script>
 </body>
