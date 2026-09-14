@@ -8,8 +8,7 @@ const userSchema = new Schema({
     },
     password: {
         required: true,
-        type: String,
-        match: /^[\x20-\x7e]{8,24}$/
+        type: String
     },
     token: {
         required: true,

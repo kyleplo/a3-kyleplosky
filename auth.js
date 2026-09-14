@@ -1,3 +1,4 @@
+import { compare, hash } from "bcryptjs";
 import { User } from "./models.js";
 
 export async function getUserByToken(token) {
@@ -44,10 +45,17 @@ export function authRoutes(app) {
             return;
         }
 
+        if (req.body.password && typeof req.body.password === "string" && !/^[\x20-\x7e]{1,100}$/.test(req.body.password)) {
+            res.status(400).json({
+                success: false,
+                error: "Invalid username or password"
+            })
+            return;
+        }
       
         const newUser = new User({
             username: req.body.username,
-            password: btoa(req.body.password),
+            password: await hash(req.body.password, 10),
             token: (Math.random()).toString(36).slice(2),
             tokenExpiry: Date.now() + 86400000
         });
@@ -110,7 +118,7 @@ export function authRoutes(app) {
             return;
         }
 
-        if (signingInUser.password !== btoa(req.body.password)) {
+        if (!(await compare(req.body.password, signingInUser.password))) {
             res.status(401).json({
                 success: false,
                 error: "Incorrect password"

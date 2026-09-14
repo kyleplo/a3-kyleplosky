@@ -51,7 +51,11 @@ nav .title {
     --pico-border-color: #bb3333;
 }
 
-button.danger:hover {
+p.danger {
+    color: #cc4444;
+}
+
+button.danger:hover, button.danger:focus {
     --pico-background-color: #bb3333;
     --pico-border-color: #aa2222;
 }
